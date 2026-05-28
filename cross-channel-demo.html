@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelTank – Cross-Channel Continuity</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f1726; }
+
+    /* ── CHANNEL BAR ── */
+    .channel-bar { height: 54px; background: #0f1726; display: flex; align-items: center; padding: 0 20px; gap: 6px; flex-shrink: 0; }
+    .cb-brand { display: flex; align-items: center; gap: 9px; margin-right: 10px; }
+    .cb-logo { width: 30px; height: 30px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .cb-name { font-size: 14px; font-weight: 700; color: white; letter-spacing: -0.01em; }
+    .cb-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.14); margin: 0 10px; }
+    .cb-label { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.09em; margin-right: 4px; }
+    .ch-tab { display: flex; align-items: center; gap: 7px; padding: 7px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); border: 1px solid transparent; background: none; transition: all 0.18s ease; font-family: 'Inter', sans-serif; }
+    .ch-tab:hover { color: rgba(255,255,255,0.88); background: rgba(255,255,255,0.07); }
+    .ch-tab.active { background: white; color: #0f1726; font-weight: 600; border-color: white; }
+    .trip-pill { margin-left: auto; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11); border-radius: 20px; padding: 5px 14px; display: flex; align-items: center; gap: 9px; font-size: 12px; color: rgba(255,255,255,0.65); }
+    .trip-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .trip-pill strong { color: white; }
+
+    /* ── VIEWS ── */
+    .view { display: none; height: calc(100vh - 54px - 110px); overflow: hidden; }
+    .view.active { display: flex; flex-direction: column; }
+    .view { transition: opacity 0.2s ease; }
+    body.switching .view { opacity: 0; }
+
+    /* ══ BROWSER ══ */
+    .browser-view { background: white; }
+    .s-nav { height: 64px; flex-shrink: 0; border-bottom: 1px solid #e9eaec; display: flex; align-items: center; padding: 0 24px; background: white; }
+    .s-brand { display: flex; align-items: center; gap: 10px; min-width: 230px; }
+    .s-brand-icon { width: 38px; height: 38px; border-radius: 50%; background: #1a2744; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    .s-brand-text h1 { font-size: 15px; font-weight: 700; color: #1a2744; }
+    .s-brand-text p { font-size: 11px; color: #9ca3af; }
+    .s-nav-center { flex: 1; text-align: center; }
+    .s-nav-center h2 { font-size: 13.5px; font-weight: 600; color: #1a2744; }
+    .s-nav-center p { font-size: 11.5px; color: #9ca3af; }
+    .s-nav-right { min-width: 230px; display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
+    .btn-discover { background: #1a2744; color: white; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .s-nav-links { display: flex; align-items: center; gap: 4px; font-size: 13.5px; }
+    .s-nav-links a { color: #6b7280; text-decoration: none; padding: 4px 6px; }
+    .s-nav-links .div { color: #d1d5db; }
+    .s-main { flex: 1; display: flex; overflow: hidden; }
+
+    /* Chat */
+    .chat-panel { width: 385px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #e9eaec; }
+    .chat-msgs { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .cm { display: flex; gap: 8px; align-items: flex-start; }
+    .cm.u { flex-direction: row-reverse; }
+    .c-av { width: 26px; height: 26px; border-radius: 50%; background: #1a2744; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .c-av.u { background: #e5e7eb; font-size: 12px; color: #6b7280; }
+    .c-bub { background: #f3f4f6; border-radius: 4px 12px 12px 12px; padding: 10px 13px; font-size: 13px; line-height: 1.55; color: #1f2937; max-width: 282px; }
+    .c-bub.u { background: #1a2744; color: white; border-radius: 12px 4px 12px 12px; }
+    .c-ts { font-size: 10px; color: #d1d5db; margin-top: 4px; text-align: right; }
+    .chat-input-wrap { padding: 12px 16px; border-top: 1px solid #e9eaec; }
+    .ci-inner { display: flex; align-items: center; gap: 8px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 24px; padding: 6px 6px 6px 16px; }
+    .ci-inner input { flex: 1; border: none; background: none; font-size: 13px; color: #9ca3af; outline: none; font-family: 'Inter', sans-serif; }
+    .ci-send { width: 32px; height: 32px; border-radius: 50%; background: #1a2744; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: white; font-size: 13px; }
+
+    /* Workspace */
+    .ws-panel { flex: 1; overflow-y: auto; background: white; position: relative; }
+    .ws-head { padding: 17px 24px 13px; border-bottom: 1px solid #f0f1f3; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 5; }
+    .ws-head h3 { font-size: 13.5px; font-weight: 600; color: #1a2744; }
+    .ws-head p { font-size: 11.5px; color: #9ca3af; }
+    .ws-tabs { display: flex; gap: 2px; background: #f3f4f6; border-radius: 8px; padding: 3px; }
+    .ws-tab { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; color: #6b7280; }
+    .ws-tab.a { background: white; color: #1a2744; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    /* Session restored banner */
+    .session-banner { display: none; align-items: center; gap: 8px; background: #f0fdf4; border-bottom: 1px solid #bbf7d0; padding: 8px 24px; font-size: 12.5px; color: #065f46; font-weight: 500; flex-shrink: 0; }
+    .session-banner.visible { display: flex; }
+    .session-banner-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
+
+    /* Trip memory */
+    .trip-mem { margin: 14px 24px 8px; background: #f8f9ff; border: 1px solid #dde3f5; border-radius: 12px; padding: 12px 15px; }
+    .trip-mem-head { display: flex; align-items: center; gap: 6px; margin-bottom: 9px; }
+    .trip-mem-head-left { display: flex; align-items: center; gap: 6px; flex: 1; }
+    .trip-mem-head span { font-size: 10.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; }
+    .trip-id-badge { font-size: 10.5px; font-weight: 700; color: #1a2744; background: #e0e8ff; border-radius: 6px; padding: 2px 8px; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .trip-mem-edit { margin-left: auto; font-size: 11px; color: #1a2744; cursor: pointer; text-decoration: underline; }
+    .m-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .m-tag { background: white; border: 1px solid #e0e5f5; border-radius: 20px; padding: 4px 10px; font-size: 11.5px; color: #374151; }
+    .m-tag em { color: #9ca3af; font-style: normal; margin-right: 3px; }
+    .ws-sec { padding: 14px 24px; }
+    .ws-sec-title { font-size: 10.5px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 11px; }
+    .hotel-list { display: flex; flex-direction: column; gap: 10px; }
+    .hotel-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; display: flex; gap: 12px; cursor: pointer; transition: box-shadow 0.2s; }
+    .hotel-card:hover { box-shadow: 0 3px 12px rgba(26,39,68,0.09); }
+    .hotel-img { width: 70px; height: 70px; border-radius: 8px; flex-shrink: 0; }
+    .hotel-img.h1 { background: linear-gradient(135deg,#1565C0,#42A5F5); }
+    .hotel-img.h2 { background: linear-gradient(135deg,#6A1B9A,#CE93D8); }
+    .hotel-img.h3 { background: linear-gradient(135deg,#BF360C,#FFCC80); }
+    .hotel-info { flex: 1; }
+    .hotel-info h4 { font-size: 13.5px; font-weight: 600; color: #1a2744; }
+    .hotel-loc { font-size: 11.5px; color: #6b7280; margin-top: 1px; }
+    .hotel-stars { color: #f59e0b; font-size: 11px; margin-top: 3px; }
+    .h-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+    .h-tag { font-size: 10.5px; background: #f3f4f6; color: #374151; padding: 2px 7px; border-radius: 8px; }
+    .hotel-price { text-align: right; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
+    .h-price { font-size: 14px; font-weight: 700; color: #1a2744; }
+    .h-per { font-size: 11px; color: #9ca3af; }
+    .h-avail { font-size: 11px; color: #10b981; }
+
+    /* Workspace actions */
+    .ws-actions { display: flex; gap: 10px; padding: 4px 24px 20px; flex-wrap: wrap; }
+    .ws-action-btn { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; border: 1.5px solid #e5e7eb; font-size: 13px; font-weight: 500; cursor: pointer; background: white; color: #374151; font-family: 'Inter', sans-serif; transition: all 0.18s; position: relative; }
+    .ws-action-btn.wa { border-color: #d1fae5; color: #065f46; background: #f0fdf4; }
+    .ws-action-btn.wa:hover { border-color: #10b981; }
+    .ws-action-btn.em { border-color: #dde3f5; color: #1a2744; background: #f8f9ff; }
+
+    /* WA "how it works" tooltip */
+    .wa-how-tooltip {
+      display: none; position: absolute; bottom: calc(100% + 10px); left: 0;
+      background: #1a2744; color: white; border-radius: 10px; padding: 12px 14px;
+      width: 290px; font-size: 12px; line-height: 1.5; z-index: 20;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .wa-how-tooltip::after { content: ''; position: absolute; top: 100%; left: 20px; border: 6px solid transparent; border-top-color: #1a2744; }
+    .wa-how-tooltip.visible { display: block; }
+    .wa-how-tt { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+    .wa-how-msg { background: rgba(255,255,255,0.1); border-radius: 6px; padding: 7px 10px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11.5px; color: #d9fdd3; margin-bottom: 8px; }
+    .wa-how-note { font-size: 11px; color: rgba(255,255,255,0.6); }
+    .wa-how-note strong { color: #34d399; }
+
+    /* ══ WHATSAPP ══ */
+    .whatsapp-view { background: #111b21; align-items: center; justify-content: center; }
+    .wa-frame { width: 380px; height: 100%; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 50px rgba(0,0,0,0.45); }
+    .wa-nav { background: #1f2c34; flex-shrink: 0; }
+    .wa-status { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 11px; color: white; }
+    .wa-bar { padding: 8px 14px 12px; display: flex; align-items: center; gap: 10px; }
+    .wa-back { color: white; font-size: 22px; cursor: pointer; }
+    .wa-av { width: 38px; height: 38px; border-radius: 50%; background: #1a2744; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .wa-ci { flex: 1; }
+    .wa-ci h3 { font-size: 15px; font-weight: 600; color: white; }
+    .wa-ci p { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .wa-actions { display: flex; gap: 18px; color: white; font-size: 18px; cursor: pointer; }
+    .wa-ctx { background: #d4f1e4; border-left: 3px solid #075e54; padding: 8px 12px; font-size: 12px; color: #155724; display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .wa-ctx code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 4px; }
+    .wa-msgs { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; background-color: #efeae2; }
+    .wa-date { text-align: center; margin: 6px 0; }
+    .wa-date span { background: rgba(11,20,26,0.18); color: #111b21; font-size: 11.5px; padding: 4px 12px; border-radius: 8px; }
+    .wa-b { max-width: 80%; padding: 7px 10px 18px; border-radius: 8px; font-size: 14px; line-height: 1.45; position: relative; color: #111b21; word-break: break-word; }
+    .wa-b.r { background: white; align-self: flex-start; border-radius: 0 8px 8px 8px; }
+    .wa-b.s { background: #d9fdd3; align-self: flex-end; border-radius: 8px 0 8px 8px; }
+    .wa-ts { position: absolute; bottom: 4px; right: 8px; font-size: 10px; color: #8696a0; }
+    .wa-b.s .wa-ts { color: #667782; }
+    .wa-b code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11.5px; background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 4px; }
+    .wa-link-msg { max-width: 80%; align-self: flex-start; background: white; border-radius: 0 8px 8px 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+    .wa-link-preview { background: #f0fdf4; border-left: 3px solid #10b981; padding: 10px 13px; }
+    .wa-link-preview .wl-domain { font-size: 10.5px; color: #10b981; font-weight: 600; margin-bottom: 3px; }
+    .wa-link-preview .wl-title { font-size: 13px; font-weight: 600; color: #111; }
+    .wa-link-preview .wl-url { font-size: 11px; color: #6b7280; margin-top: 2px; font-family: monospace; }
+    .wa-link-body { padding: 7px 13px 18px; font-size: 14px; color: #111b21; position: relative; }
+    .wa-card { max-width: 82%; align-self: flex-start; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .wa-card-hd { background: linear-gradient(135deg,#1a2744,#2d4a8a); padding: 11px 14px; color: white; }
+    .wa-card-hd h4 { font-size: 14px; font-weight: 600; }
+    .wa-card-hd p { font-size: 11.5px; opacity: 0.75; margin-top: 1px; }
+    .wa-ci2 { padding: 9px 13px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    .wa-ci2:last-of-type { border-bottom: none; }
+    .wa-ci2 strong { display: block; color: #111; font-size: 13px; }
+    .wa-ci2 .det { color: #6b7280; font-size: 12px; margin-top: 1px; }
+    .wa-ci2 .pri { color: #1a2744; font-weight: 700; font-size: 13px; float: right; }
+    .wa-qr { display: flex; flex-wrap: wrap; gap: 7px; align-self: flex-start; margin: 2px 0 6px; }
+    .wa-qr-btn { background: white; border: 1.5px solid #25d366; color: #075e54; border-radius: 18px; padding: 6px 14px; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; }
+    .wa-input { background: #f0f2f5; padding: 8px 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .wa-inp-box { flex: 1; background: white; border-radius: 20px; padding: 9px 16px; font-size: 14px; color: #8696a0; border: none; outline: none; font-family: 'Inter', sans-serif; }
+    .wa-send-btn { width: 40px; height: 40px; border-radius: 50%; background: #00a884; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+
+    /* ══ EMAIL ══ */
+    .email-view { background: #f6f8fa; }
+    .e-layout { display: flex; height: 100%; overflow: hidden; }
+    .e-sidebar { width: 215px; background: #f1f3f4; border-right: 1px solid #e0e0e0; padding: 14px 0; flex-shrink: 0; }
+    .e-compose { display: flex; align-items: center; gap: 8px; margin: 0 12px 14px; background: white; border: 1px solid #dadce0; border-radius: 24px; padding: 10px 18px; font-size: 13.5px; font-weight: 600; color: #374151; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .e-folder { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-size: 13.5px; color: #374151; cursor: pointer; border-radius: 0 20px 20px 0; margin-right: 12px; }
+    .e-folder.a { background: #d3e3fd; color: #1a2744; font-weight: 600; }
+    .e-folder-n { margin-left: auto; font-size: 12px; font-weight: 700; }
+    .e-div { height: 1px; background: #e0e0e0; margin: 7px 12px; }
+    .e-list { width: 305px; background: white; border-right: 1px solid #e0e0e0; overflow-y: auto; flex-shrink: 0; }
+    .e-list-hd { padding: 14px 16px 10px; font-size: 18px; font-weight: 700; color: #111; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 2; }
+    .e-list-hd span { font-size: 12px; color: #9ca3af; font-weight: 400; }
+    .e-row { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+    .e-row.a { background: #eef2ff; border-left: 3px solid #1a2744; padding-left: 13px; }
+    .e-row.u .e-sender { font-weight: 700; }
+    .e-row.u .e-subj { font-weight: 700; }
+    .e-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .e-sender { font-size: 13.5px; color: #111; }
+    .e-time { font-size: 11px; color: #9ca3af; }
+    .e-subj { font-size: 13px; color: #374151; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .e-prev { font-size: 12px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .e-dot { width: 8px; height: 8px; border-radius: 50%; background: #1a2744; flex-shrink: 0; }
+    .e-detail { flex: 1; overflow-y: auto; padding: 32px 42px 48px; }
+    .e-subject { font-size: 22px; font-weight: 800; color: #111; margin-bottom: 18px; line-height: 1.3; }
+    .e-from-row { display: flex; align-items: flex-start; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+    .e-from-av { width: 38px; height: 38px; border-radius: 50%; background: #1a2744; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .e-from-meta h4 { font-size: 14px; font-weight: 600; color: #111; }
+    .e-from-meta p { font-size: 13px; color: #6b7280; margin-top: 1px; }
+    .e-date { margin-left: auto; font-size: 12px; color: #9ca3af; white-space: nowrap; }
+    .e-body { font-size: 14px; line-height: 1.75; color: #374151; }
+    .e-body p { margin-bottom: 15px; }
+    .prop-card { border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; margin: 18px 0 22px; }
+    .prop-hd { background: linear-gradient(135deg,#1a2744 0%,#2d4a8a 100%); padding: 20px 24px; color: white; }
+    .prop-hd-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .prop-hd h3 { font-size: 19px; font-weight: 800; margin-bottom: 3px; }
+    .prop-hd p { font-size: 13px; opacity: 0.72; }
+    .prop-hd-icon { font-size: 30px; }
+    .prop-summary { background: white; padding: 16px 22px; border-bottom: 1px solid #f0f0f0; }
+    .sum-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .sum-item { padding: 7px 10px 7px 0; border-bottom: 1px solid #f5f5f5; }
+    .sum-item:nth-child(odd) { border-right: 1px solid #f5f5f5; }
+    .sum-item .sl { font-size: 10.5px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1px; }
+    .sum-item .sv { font-size: 13.5px; font-weight: 600; color: #111; }
+    .prop-hotels { padding: 16px 22px; background: white; }
+    .prop-hotels h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 10px; }
+    .eh-item { display: flex; gap: 13px; padding: 11px 0; border-bottom: 1px solid #f5f5f5; }
+    .eh-item:last-child { border-bottom: none; }
+    .eh-img { width: 68px; height: 58px; border-radius: 8px; flex-shrink: 0; }
+    .eh-img.c1 { background: linear-gradient(135deg,#1565C0,#64B5F6); }
+    .eh-img.c2 { background: linear-gradient(135deg,#6A1B9A,#CE93D8); }
+    .eh-img.c3 { background: linear-gradient(135deg,#BF360C,#FFCC80); }
+    .eh-info { flex: 1; }
+    .eh-info h4 { font-size: 13.5px; font-weight: 600; color: #111; }
+    .eh-info p { font-size: 12px; color: #6b7280; margin-top: 1px; }
+    .eh-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+    .eh-tag { font-size: 10px; background: #f3f4f6; color: #374151; padding: 2px 7px; border-radius: 6px; }
+    .eh-price { text-align: right; flex-shrink: 0; }
+    .eh-price .pp { font-size: 14px; font-weight: 700; color: #1a2744; }
+    .eh-price .ps { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+    .prop-cta { padding: 18px 22px; background: #f9fafb; display: flex; align-items: center; gap: 12px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .prop-cta-btn { background: #1a2744; color: white; padding: 11px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; font-family: 'Inter', sans-serif; }
+    .prop-cta-btn .cta-url { display: block; font-size: 10px; font-weight: 400; opacity: 0.65; margin-top: 2px; font-family: monospace; }
+    .prop-cta-wa { display: flex; align-items: center; gap: 7px; padding: 11px 18px; border-radius: 8px; border: 1.5px solid #d1fae5; background: #f0fdf4; color: #065f46; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .prop-cta-wa-note { font-size: 11px; color: #9ca3af; margin-top: 4px; width: 100%; }
+    .e-sig { margin-top: 26px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+    .e-sig-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .e-sig-icon { width: 28px; height: 28px; background: #1a2744; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .e-sig-name { font-size: 14px; font-weight: 700; color: #1a2744; }
+    .e-sig p { font-size: 12px; color: #9ca3af; line-height: 1.6; }
+
+    /* ── DEMO HIGHLIGHT ── */
+    .demo-hl { box-shadow: 0 0 0 3px #3b82f6, 0 0 28px rgba(59,130,246,0.4) !important; animation: hl-pulse 1.8s ease-in-out infinite; position: relative; z-index: 10; border-radius: 12px; }
+    @keyframes hl-pulse { 0%,100%{box-shadow:0 0 0 3px #3b82f6,0 0 28px rgba(59,130,246,0.4)} 50%{box-shadow:0 0 0 4px #60a5fa,0 0 44px rgba(96,165,250,0.55)} }
+    .demo-hl-click { animation: hl-click 0.35s ease forwards !important; }
+    @keyframes hl-click { 0%{transform:scale(1)} 40%{transform:scale(0.96);filter:brightness(1.15)} 100%{transform:scale(1)} }
+
+    /* ── ANNOTATION BAR ── */
+    .anno-bar { height: 110px; flex-shrink: 0; background: #0f1726; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; padding: 0 24px; gap: 18px; }
+    .anno-left { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+    .anno-dots { display: flex; gap: 4px; }
+    .anno-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.18); transition: background 0.2s, transform 0.2s; }
+    .anno-dot.done { background: rgba(255,255,255,0.4); }
+    .anno-dot.cur { background: #60a5fa; transform: scale(1.4); }
+    .anno-step { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 600; }
+    .anno-main { flex: 1; min-width: 0; }
+    .anno-top-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .anno-channel { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 10px; background: rgba(96,165,250,0.15); color: #93c5fd; white-space: nowrap; }
+    .anno-title { font-size: 13.5px; font-weight: 700; color: white; }
+    .anno-body { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.45; margin-bottom: 6px; }
+    .anno-mechs { display: flex; flex-wrap: wrap; gap: 5px; }
+    .anno-mech { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: rgba(52,211,153,0.12); color: #6ee7b7; letter-spacing: 0.02em; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .anno-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    .anno-btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .anno-btn.back { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.12); }
+    .anno-btn.back:hover { background: rgba(255,255,255,0.12); color: white; }
+    .anno-btn.back:disabled { opacity: 0.25; cursor: default; }
+    .anno-btn.next { background: #3b82f6; color: white; border: 1px solid transparent; }
+    .anno-btn.next:hover { background: #2563eb; }
+    .anno-btn.next.handoff { background: linear-gradient(135deg,#3b82f6,#7c3aed); }
+    .anno-btn.next:disabled { opacity: 0.4; cursor: default; }
+
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- CHANNEL BAR -->
+  <div class="channel-bar">
+    <div class="cb-brand"><div class="cb-logo">✈️</div><span class="cb-name">TravelTank</span></div>
+    <div class="cb-divider"></div>
+    <span class="cb-label">Channel</span>
+    <button class="ch-tab active" data-channel="browser" onclick="manualSwitch(this,'browser')">🌐&nbsp; Browser</button>
+    <button class="ch-tab" data-channel="whatsapp" onclick="manualSwitch(this,'whatsapp')">💬&nbsp; WhatsApp</button>
+    <button class="ch-tab" data-channel="email" onclick="manualSwitch(this,'email')">✉️&nbsp; Email</button>
+    <div class="trip-pill"><div class="trip-pill-dot"></div>Trip in progress: <strong>Greece · July · Family of 4 · £3,000</strong></div>
+  </div>
+
+  <!-- ════════ BROWSER ════════ -->
+  <div class="view browser-view active" id="view-browser">
+    <nav class="s-nav">
+      <div class="s-brand"><div class="s-brand-icon">✈️</div><div class="s-brand-text"><h1>Sally</h1><p>Your personal travel concierge</p></div></div>
+      <div class="s-nav-center"><h2>Your Trip Workspace</h2><p>Results appear here as we chat</p></div>
+      <div class="s-nav-right"><button class="btn-discover">✦ Discover</button><div class="s-nav-links"><a href="#">Build</a><span class="div">&nbsp;|&nbsp;</span><a href="#">Book</a></div></div>
+    </nav>
+    <div class="s-main">
+      <!-- Chat -->
+      <div class="chat-panel">
+        <div class="chat-msgs" id="demo-chat">
+          <div class="cm"><div class="c-av">✈️</div><div class="c-bub">Hi! I'm Sally, your TravelTank travel concierge. 👋</div></div>
+          <div class="cm"><div class="c-av">✈️</div><div class="c-bub">Tell me about the trip you're dreaming of – when you're thinking of going, who's travelling, and what kind of experience you're after.</div></div>
+          <div class="cm u"><div class="c-av u">S</div><div><div class="c-bub u">Family of 4 – two adults, kids 8 and 11. July, beach holiday in the Med. Budget around £3,000 all-in. Flying from Heathrow.</div><div class="c-ts">10:32</div></div></div>
+          <div class="cm"><div class="c-av">✈️</div><div class="c-bub">Great – I've started a trip plan for you. For a family on £3k in July, Greece is your strongest match. I've saved everything you've told me so far. What matters most – beach quality, activities for the kids, or best value?</div></div>
+          <div class="cm u"><div class="c-av u">S</div><div><div class="c-bub u">Beach quality, and the kids love water parks.</div><div class="c-ts">10:34</div></div></div>
+          <div class="cm"><div class="c-av">✈️</div><div class="c-bub">Perfect – Rhodes and Crete stand out for both. I've shortlisted 3 hotels in your workspace with pricing. 👉</div></div>
+        </div>
+        <div class="chat-input-wrap"><div class="ci-inner"><input type="text" placeholder="Tell Sally about your dream trip…" readonly><button class="ci-send">➤</button></div></div>
+      </div>
+      <!-- Workspace -->
+      <div class="ws-panel">
+        <div class="session-banner" id="demo-session-banner">
+          <div class="session-banner-dot"></div>
+          Session restored from trip <code style="font-family:monospace;font-size:11.5px;background:rgba(0,0,0,0.07);padding:1px 6px;border-radius:4px">#TT-4821</code> — picked up exactly where you left off.
+        </div>
+        <div class="ws-head">
+          <div><h3>Your Trip Workspace</h3><p>3 hotels shortlisted · Greece · July 2025</p></div>
+          <div class="ws-tabs"><div class="ws-tab a">Hotels</div><div class="ws-tab">Destinations</div><div class="ws-tab">Flights</div></div>
+        </div>
+        <div class="trip-mem" id="demo-tripmem">
+          <div class="trip-mem-head">
+            <div class="trip-mem-head-left">
+              <span>🧠 Trip Memory</span>
+              <div class="trip-id-badge">#TT-4821</div>
+            </div>
+            <span class="trip-mem-edit">Edit</span>
+          </div>
+          <div class="m-tags">
+            <div class="m-tag"><em>Dates</em>July 2025</div>
+            <div class="m-tag"><em>From</em>Heathrow</div>
+            <div class="m-tag"><em>Party</em>2 adults · kids 8 &amp; 11</div>
+            <div class="m-tag"><em>Budget</em>£3,000</div>
+            <div class="m-tag"><em>Priority</em>Beach quality</div>
+            <div class="m-tag"><em>Must-have</em>Water park / kids activities</div>
+            <div class="m-tag"><em>Destination</em>Greece (preferred)</div>
+          </div>
+        </div>
+        <div class="ws-sec" id="demo-workspace">
+          <div class="ws-sec-title">Shortlisted Hotels</div>
+          <div class="hotel-list">
+            <div class="hotel-card"><div class="hotel-img h1"></div><div class="hotel-info"><h4>Ikos Oceania</h4><div class="hotel-loc">📍 Halkidiki, Greece</div><div class="hotel-stars">★★★★★</div><div class="h-tags"><span class="h-tag">All-inclusive</span><span class="h-tag">Water park</span><span class="h-tag">Kids club</span></div></div><div class="hotel-price"><div><div class="h-price">£2,840</div><div class="h-per">total · 7 nights</div></div><div class="h-avail">✓ Available</div></div></div>
+            <div class="hotel-card"><div class="hotel-img h2"></div><div class="hotel-info"><h4>Grecotel Creta Palace</h4><div class="hotel-loc">📍 Crete, Greece</div><div class="hotel-stars">★★★★★</div><div class="h-tags"><span class="h-tag">Half-board</span><span class="h-tag">Aqua park</span><span class="h-tag">Private beach</span></div></div><div class="hotel-price"><div><div class="h-price">£2,960</div><div class="h-per">total · 7 nights</div></div><div class="h-avail">✓ Available</div></div></div>
+            <div class="hotel-card"><div class="hotel-img h3"></div><div class="hotel-info"><h4>Rodos Palladium</h4><div class="hotel-loc">📍 Rhodes, Greece</div><div class="hotel-stars">★★★★☆</div><div class="h-tags"><span class="h-tag">All-inclusive</span><span class="h-tag">Pools</span><span class="h-tag">Family rooms</span></div></div><div class="hotel-price"><div><div class="h-price">£2,720</div><div class="h-per">total · 7 nights</div></div><div class="h-avail">✓ Available</div></div></div>
+          </div>
+        </div>
+        <div class="ws-actions">
+          <!-- "Continue on WhatsApp" with transparent mechanism tooltip -->
+          <div style="position:relative">
+            <button class="ws-action-btn wa" id="demo-sendwa">💬 Continue on WhatsApp</button>
+            <div class="wa-how-tooltip" id="demo-wa-tooltip">
+              <div class="wa-how-tt">What actually happens</div>
+              <div class="wa-how-msg">Hi Sally 👋 Continuing my trip planning.<br>Reference: <strong>#TT-4821</strong></div>
+              <div class="wa-how-note">Sarah's phone opens WhatsApp with this message pre-filled. <strong>She sends it herself</strong> — so TravelTank never initiates contact, keeping this fully compliant with WhatsApp Business API rules.</div>
+            </div>
+          </div>
+          <button class="ws-action-btn em" id="demo-sendemail">✉️ Send summary by email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ WHATSAPP ════════ -->
+  <div class="view whatsapp-view" id="view-whatsapp">
+    <div class="wa-frame">
+      <div class="wa-nav">
+        <div class="wa-status"><span>9:41</span><span style="letter-spacing:2px">● ● ●</span></div>
+        <div class="wa-bar"><span class="wa-back">‹</span><div class="wa-av">✈️</div><div class="wa-ci"><h3>Sally · TravelTank</h3><p>Your travel concierge</p></div><div class="wa-actions"><span>📞</span><span>⋮</span></div></div>
+      </div>
+      <div class="wa-ctx" id="demo-wactx">
+        🔗 <span>Trip <code>#TT-4821</code> loaded · Continuing from browser session</span>
+      </div>
+      <div class="wa-msgs">
+        <div class="wa-date"><span>Today</span></div>
+        <!-- Sarah initiates — this is the key realism point -->
+        <div class="wa-b s">Hi Sally 👋 Continuing my trip planning. Reference: #TT-4821<span class="wa-ts">7:12 pm</span></div>
+        <div class="wa-b r">Hey Sarah! I've pulled up your trip — Greece, July, family of 4, beach and water parks. Right where we left off. 🌊<span class="wa-ts">7:12 pm</span></div>
+        <div class="wa-b r">Here's your shortlist. Three options, all within budget:<span class="wa-ts">7:13 pm</span></div>
+        <div class="wa-card" id="demo-wacard">
+          <div class="wa-card-hd"><h4>Your Greece Shortlist 🇬🇷</h4><p>July 2025 · Family of 4 · Heathrow</p></div>
+          <div class="wa-ci2"><span class="pri">£2,840</span><strong>Ikos Oceania</strong><div class="det">Halkidiki · All-inclusive · Water park · Kids club</div></div>
+          <div class="wa-ci2"><span class="pri">£2,960</span><strong>Grecotel Creta Palace</strong><div class="det">Crete · Half-board · Aqua park · Private beach</div></div>
+          <div class="wa-ci2"><span class="pri">£2,720</span><strong>Rodos Palladium</strong><div class="det">Rhodes · All-inclusive · Pools · Family rooms</div></div>
+        </div>
+        <div class="wa-b r">Which stands out? Or want me to dig deeper on any of them? 😊<span class="wa-ts">7:13 pm</span></div>
+        <div class="wa-qr"><button class="wa-qr-btn">Tell me more about Ikos</button><button class="wa-qr-btn">Compare beaches</button></div>
+        <div class="wa-b s">The Ikos looks great. Can I see the full comparison?<span class="wa-ts">7:18 pm</span></div>
+        <!-- Deep link message — mechanism made visible -->
+        <div class="wa-link-msg" id="demo-waopen">
+          <div class="wa-link-preview">
+            <div class="wl-domain">traveltank.com</div>
+            <div class="wl-title">Your Greece Holiday Workspace</div>
+            <div class="wl-url">traveltank.com/trip/TT-4821</div>
+          </div>
+          <div class="wa-link-body">Open this on your browser for the full comparison — your session is saved, it'll pick up exactly here. 👆<span class="wa-ts">7:18 pm</span></div>
+        </div>
+        <div class="wa-qr"><button class="wa-qr-btn">Send email summary</button><button class="wa-qr-btn">Open in browser</button></div>
+      </div>
+      <div class="wa-input"><span style="font-size:22px;color:#8696a0">😊</span><input class="wa-inp-box" type="text" placeholder="Message" readonly><div class="wa-send-btn">🎙</div></div>
+    </div>
+  </div>
+
+  <!-- ════════ EMAIL ════════ -->
+  <div class="view email-view" id="view-email">
+    <div class="e-layout">
+      <div class="e-sidebar">
+        <button class="e-compose">✏️ &nbsp;Compose</button>
+        <div class="e-folder a">📥&nbsp; Inbox <span class="e-folder-n">2</span></div>
+        <div class="e-folder">⭐&nbsp; Starred</div><div class="e-folder">📤&nbsp; Sent</div><div class="e-folder">📁&nbsp; Drafts</div>
+        <div class="e-div"></div>
+        <div class="e-folder">🏷️&nbsp; Travel</div><div class="e-folder">📋&nbsp; Bookings</div>
+      </div>
+      <div class="e-list">
+        <div class="e-list-hd">Inbox <span>2 unread</span></div>
+        <div class="e-row u a"><div class="e-top"><span class="e-sender">Sally · TravelTank</span><div style="display:flex;gap:6px;align-items:center"><div class="e-dot"></div><span class="e-time">8:02 pm</span></div></div><div class="e-subj">Your Greece Family Holiday – Summary &amp; Next Steps</div><div class="e-prev">Hi Sarah, here's everything from today's session pulled into one place…</div></div>
+        <div class="e-row u"><div class="e-top"><span class="e-sender">Sally · TravelTank</span><div style="display:flex;gap:6px;align-items:center"><div class="e-dot"></div><span class="e-time">Yesterday</span></div></div><div class="e-subj">👋 Welcome to TravelTank – I'm Sally</div><div class="e-prev">Hi! I'm Sally, your personal travel concierge…</div></div>
+        <div class="e-row"><div class="e-top"><span class="e-sender">TravelTank Bookings</span><span class="e-time">Mon</span></div><div class="e-subj">Booking confirmed – Hotel Avenida Palace</div><div class="e-prev">Your booking ref: TT-2024-8831 is confirmed…</div></div>
+      </div>
+      <div class="e-detail">
+        <div class="e-subject">Your Greece Family Holiday – Summary &amp; Next Steps ✈️</div>
+        <div class="e-from-row">
+          <div class="e-from-av">✈️</div>
+          <div class="e-from-meta"><h4>Sally · TravelTank</h4><p>sally@traveltank.com → sarah@example.com</p></div>
+          <div class="e-date">Today, 8:02 pm</div>
+        </div>
+        <div class="e-body">
+          <p>Hi Sarah,</p>
+          <p>Here's a clean summary of everything from today's session — easy to review at your own pace or share with Tom.</p>
+          <div class="prop-card" id="demo-propcard">
+            <div class="prop-hd"><div class="prop-hd-top"><div><h3>Greece Family Holiday</h3><p>Trip #TT-4821 · Summary prepared by Sally · 20 May 2025</p></div><div class="prop-hd-icon">🇬🇷</div></div></div>
+            <div class="prop-summary">
+              <div class="sum-grid">
+                <div class="sum-item"><div class="sl">Destination</div><div class="sv">Greece (Med)</div></div>
+                <div class="sum-item"><div class="sl">Travel dates</div><div class="sv">July 2025 · Flexible</div></div>
+                <div class="sum-item"><div class="sl">Departing from</div><div class="sv">Heathrow (LHR)</div></div>
+                <div class="sum-item"><div class="sl">Party</div><div class="sv">2 adults · kids 8 &amp; 11</div></div>
+                <div class="sum-item"><div class="sl">Total budget</div><div class="sv">£3,000</div></div>
+                <div class="sum-item"><div class="sl">Priorities</div><div class="sv">Beach quality · Kids activities</div></div>
+              </div>
+            </div>
+            <div class="prop-hotels">
+              <h4>Shortlisted Hotels</h4>
+              <div class="eh-item"><div class="eh-img c1"></div><div class="eh-info"><h4>Ikos Oceania ★★★★★</h4><p>Halkidiki · All-inclusive</p><div class="eh-tags"><span class="eh-tag">Water park</span><span class="eh-tag">Kids club</span><span class="eh-tag">Direct 3h20</span></div></div><div class="eh-price"><div class="pp">£2,840</div><div class="ps">hotel · 7 nights</div></div></div>
+              <div class="eh-item"><div class="eh-img c2"></div><div class="eh-info"><h4>Grecotel Creta Palace ★★★★★</h4><p>Crete · Half-board</p><div class="eh-tags"><span class="eh-tag">Aqua park</span><span class="eh-tag">Beach</span><span class="eh-tag">Direct 3h45</span></div></div><div class="eh-price"><div class="pp">£2,960</div><div class="ps">hotel · 7 nights</div></div></div>
+              <div class="eh-item"><div class="eh-img c3"></div><div class="eh-info"><h4>Rodos Palladium ★★★★</h4><p>Rhodes · All-inclusive</p><div class="eh-tags"><span class="eh-tag">Pools</span><span class="eh-tag">Family rooms</span><span class="eh-tag">Best value</span></div></div><div class="eh-price"><div class="pp">£2,720</div><div class="ps">hotel · 7 nights</div></div></div>
+            </div>
+            <div class="prop-cta">
+              <button class="prop-cta-btn">↩ Continue Planning in Browser<span class="cta-url">traveltank.com/trip/TT-4821</span></button>
+              <div>
+                <button class="prop-cta-wa" id="demo-emailwa">💬 Continue on WhatsApp</button>
+                <div class="prop-cta-wa-note">Opens a WhatsApp chat with Sally — your trip reference is pre-loaded.</div>
+              </div>
+            </div>
+          </div>
+          <p>All prices reflect live availability. July fills up fast — worth confirming within a few days.</p>
+          <p>Want to carry on the conversation? Hit "Continue on WhatsApp" and Sally will pick up right where this email leaves off.</p>
+          <p>Speak soon,</p>
+          <div class="e-sig"><div class="e-sig-row"><div class="e-sig-icon">✈️</div><span class="e-sig-name">Sally</span></div><p>Your personal travel concierge at TravelTank<br>Chat: traveltank.com/chat · WhatsApp: available via app</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNOTATION BAR -->
+  <div class="anno-bar">
+    <div class="anno-left">
+      <div class="anno-dots" id="anno-dots"></div>
+      <div class="anno-step" id="anno-step">1 of 9</div>
+    </div>
+    <div class="anno-main">
+      <div class="anno-top-row">
+        <div class="anno-channel" id="anno-channel">Browser</div>
+        <div class="anno-title" id="anno-title">The planning session begins</div>
+      </div>
+      <div class="anno-body" id="anno-body">Sarah describes her holiday to Sally. The browser is the primary environment — rich enough for comparison, imagery, and open-ended discovery.</div>
+      <div class="anno-mechs" id="anno-mechs"></div>
+    </div>
+    <div class="anno-btns">
+      <button class="anno-btn back" id="btn-back" onclick="go(-1)" disabled>← Back</button>
+      <button class="anno-btn next" id="btn-next" onclick="go(1)">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    const STEPS = [
+      {
+        channel: 'browser', label: 'Browser',
+        title: 'The planning session begins',
+        body: 'Sarah describes her holiday to Sally. The browser is the primary environment — rich enough for comparison, imagery, and open-ended discovery.',
+        mechs: [],
+        hl: 'demo-chat', handoff: null,
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'browser', label: 'Browser',
+        title: 'A server-side trip object is created',
+        body: 'Every preference is stored in a central trip object (Trip #TT-4821) on the server — not in the browser session. This is the foundation that makes cross-channel continuity possible. Any channel that knows this ID can read and update the same data.',
+        mechs: ['Server-side trip object', 'Unique trip ID: #TT-4821', 'Any channel can read/write'],
+        hl: 'demo-tripmem', handoff: null,
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'browser', label: 'Browser → WhatsApp',
+        title: 'Sarah initiates the WhatsApp connection herself',
+        body: '"Continue on WhatsApp" generates a pre-filled message containing the trip reference. Sarah sends it from her own phone. TravelTank never pushes to her — keeping this fully compliant with WhatsApp Business API, which requires users to initiate contact.',
+        mechs: ['wa.me deep link', 'User-initiated (API compliant)', 'Pre-filled message with #TT-4821'],
+        hl: 'demo-sendwa', handoff: 'whatsapp', nextLabel: 'Jump to WhatsApp →',
+        onEnter: ['show-wa-tooltip'], onExit: ['hide-wa-tooltip'],
+      },
+      {
+        channel: 'whatsapp', label: 'WhatsApp',
+        title: 'Sally retrieves the trip from the reference',
+        body: "Sarah's opening message contains her trip ID. Sally uses it to fetch the server-side trip object — instantly resuming the conversation. No re-introduction. No repeated questions. The context strip confirms what was loaded.",
+        mechs: ['Trip ID in user message', 'Server lookup: GET /trip/TT-4821', 'Same object, different channel'],
+        hl: 'demo-wactx', handoff: null,
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'whatsapp', label: 'WhatsApp',
+        title: 'Compressed for the channel',
+        body: 'Three options, short rationale, one clear next step. WhatsApp\'s constraints are respected — no tables, no maps, no information overload. The AI adapts its output format based on which channel it\'s responding in.',
+        mechs: ['Channel-aware response format', 'Max 3 options', 'Progressive disclosure'],
+        hl: 'demo-wacard', handoff: null,
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'whatsapp', label: 'WhatsApp → Browser',
+        title: 'Sally sends a deep link back to the full workspace',
+        body: 'The link contains the trip ID as a URL parameter. Tapping it on any device fetches the trip object from the server and restores the exact workspace state — same shortlist, same memory, zero re-entry.',
+        mechs: ['URL: traveltank.com/trip/TT-4821', 'Trip ID in URL parameter', 'Server fetches trip on load'],
+        hl: 'demo-waopen', handoff: 'browser', nextLabel: 'Jump to Browser →',
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'browser', label: 'Browser',
+        title: 'Session restored from the server',
+        body: 'The URL parameter tells the browser which trip object to load. No magic — a standard server-side fetch using the trip ID. The banner confirms what was restored and from where.',
+        mechs: ['GET /trip/TT-4821', 'Standard REST lookup', 'Stateless — works on any device'],
+        hl: 'demo-workspace', handoff: null,
+        onEnter: ['show-session-banner'], onExit: ['hide-session-banner'],
+      },
+      {
+        channel: 'browser', label: 'Browser → Email',
+        title: 'Sally generates a structured proposal and emails it',
+        body: 'Email is used for what it\'s best at: recap, reassurance, and shareability. The "Continue Planning" CTA embeds the trip ID in the URL, so clicking it from any device or email client restores the session immediately.',
+        mechs: ['Transactional email (e.g. SendGrid)', 'Trip ID embedded in CTA URL', 'Stateless link — shareable'],
+        hl: 'demo-sendemail', handoff: 'email', nextLabel: 'Jump to Email →',
+        onEnter: [], onExit: [],
+      },
+      {
+        channel: 'email', label: 'Email → WhatsApp',
+        title: 'Sarah continues the conversation on WhatsApp',
+        body: '"Continue on WhatsApp" is a wa.me link to Sally\'s WhatsApp Business number. Sarah\'s trip reference is passed in the pre-filled message, so Sally picks up the conversation in the same state as the email — no re-explanation needed. Same person, same trip, different channel.',
+        mechs: ['wa.me deep link', 'Trip ID in pre-filled message', 'User-initiated (API compliant)'],
+        hl: 'demo-emailwa', handoff: null, nextLabel: 'Done ✓',
+        onEnter: [], onExit: [],
+      },
+    ];
+
+    let current = 0;
+
+    function runEffects(effects) {
+      effects.forEach(e => {
+        if (e === 'show-wa-tooltip')     document.getElementById('demo-wa-tooltip').classList.add('visible');
+        if (e === 'hide-wa-tooltip')     document.getElementById('demo-wa-tooltip').classList.remove('visible');
+        if (e === 'show-session-banner') document.getElementById('demo-session-banner').classList.add('visible');
+        if (e === 'hide-session-banner') document.getElementById('demo-session-banner').classList.remove('visible');
+      });
+    }
+
+    function render(idx) {
+      const step = STEPS[idx];
+
+      // Run exit effects for previous step
+      if (idx !== current || idx === 0) {
+        // handled in go()
+      }
+
+      // Switch channel
+      switchToChannel(step.channel);
+
+      // Dots
+      const dotsEl = document.getElementById('anno-dots');
+      dotsEl.innerHTML = '';
+      STEPS.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'anno-dot' + (i < idx ? ' done' : i === idx ? ' cur' : '');
+        dotsEl.appendChild(d);
+      });
+      document.getElementById('anno-step').textContent = `${idx + 1} of ${STEPS.length}`;
+
+      // Text
+      document.getElementById('anno-channel').textContent = step.label;
+      document.getElementById('anno-title').textContent   = step.title;
+      document.getElementById('anno-body').textContent    = step.body;
+
+      // Mechanism tags
+      const mechsEl = document.getElementById('anno-mechs');
+      mechsEl.innerHTML = '';
+      step.mechs.forEach(m => {
+        const t = document.createElement('div');
+        t.className = 'anno-mech';
+        t.textContent = m;
+        mechsEl.appendChild(t);
+      });
+
+      // Buttons
+      document.getElementById('btn-back').disabled = idx === 0;
+      const nextBtn = document.getElementById('btn-next');
+      const isLast = idx === STEPS.length - 1;
+      nextBtn.textContent = step.nextLabel || (isLast ? 'Done ✓' : 'Next →');
+      nextBtn.className = 'anno-btn next' + (step.handoff ? ' handoff' : '');
+      nextBtn.disabled = isLast && !step.nextLabel;
+
+      // Highlight
+      document.querySelectorAll('.demo-hl').forEach(el => el.classList.remove('demo-hl'));
+      const hlEl = document.getElementById(step.hl);
+      if (hlEl) {
+        setTimeout(() => {
+          hlEl.classList.add('demo-hl');
+          hlEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 280);
+      }
+
+      // Enter effects
+      setTimeout(() => runEffects(step.onEnter || []), 300);
+    }
+
+    function go(dir) {
+      const step = STEPS[current];
+
+      // Exit effects for current step
+      runEffects(step.onExit || []);
+
+      if (dir === 1 && step.handoff) {
+        const hlEl = document.getElementById(step.hl);
+        if (hlEl) {
+          hlEl.classList.remove('demo-hl');
+          hlEl.classList.add('demo-hl-click');
+          setTimeout(() => {
+            hlEl.classList.remove('demo-hl-click');
+            current += dir;
+            render(current);
+          }, 380);
+          return;
+        }
+      }
+
+      current = Math.min(Math.max(current + dir, 0), STEPS.length - 1);
+      render(current);
+    }
+
+    function switchToChannel(channel) {
+      document.body.classList.add('switching');
+      setTimeout(() => {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('view-' + channel).classList.add('active');
+        const tab = document.querySelector(`[data-channel="${channel}"]`);
+        if (tab) tab.classList.add('active');
+        document.body.classList.remove('switching');
+      }, 200);
+    }
+
+    function manualSwitch(el, channel) {
+      document.querySelectorAll('.demo-hl').forEach(e => e.classList.remove('demo-hl'));
+      runEffects(['hide-wa-tooltip', 'hide-session-banner']);
+      document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('view-' + channel).classList.add('active');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); if (current < STEPS.length - 1) go(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); if (current > 0) go(-1); }
+    });
+
+    render(0);
+  </script>
+</body>
+</html>
